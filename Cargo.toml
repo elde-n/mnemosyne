@@ -1,0 +1,25 @@
+[package]
+name = "mnemosyne"
+readme = "README.org"
+description = "a process hooking library"
+repository = "https://github.com/elde-n/mnemosyne"
+
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-3.0-only"
+
+[features]
+module = ["nix", "xxhash-rust"]
+detour = ["module"]
+vtable = ["module"]
+scanner = ["memchr", "xxhash-rust"]
+
+[dependencies]
+memchr = { version = "2.7.4", optional = true }
+nix = { version = "0.29.0", features = [
+	"uio",
+	"mman",
+	"process",
+	"feature"
+], optional = true }
+xxhash-rust = { version = "0.8.15", features = ["xxh64"], optional = true }
