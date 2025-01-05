@@ -24,15 +24,15 @@ impl Scanner {
             .push(Signature::new(signature, self.wildcard.as_str()).to_decimal());
     }
 
-    pub fn scan(&mut self) -> Vec<u64> {
-        let mut addresses = Vec::new();
+    pub fn scan(&mut self) -> Vec<Option<u64>> {
+        let mut addresses = vec![None; self.signatures.len()];
 
-        for signature in self.signatures.iter() {
+        for (i, signature) in self.signatures.iter().enumerate() {
             let (needle, offset) = signature.into_needle();
-            memchr::memmem::find_iter(&self.bytes, &needle.as_slice()).for_each(|i| {
-                let index = i - offset as usize;
+            memchr::memmem::find_iter(&self.bytes, &needle.as_slice()).for_each(|j| {
+                let index = j - offset as usize;
                 if signature.match_bytes(&self.bytes[index..index + (signature.len() as usize)]) {
-                    addresses.push(index as u64);
+                    addresses[i] = Some(index as u64);
                 }
             });
         }
@@ -259,6 +259,6 @@ mod tests {
         scanner.add_signature("FF ? FF ? 00 00 AA AA AA ? BB");
 
         let result = scanner.scan();
-        assert_eq!(result, vec![0, 8]);
+        assert_eq!(result, vec![Some(0), Some(8), None]);
     }
 }
