@@ -1,4 +1,4 @@
-#+title: Mnemosyne
+# Mnemosyne
 a rust library for
 
 - hooking functions
