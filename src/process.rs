@@ -15,9 +15,7 @@ fn process_from_path(path: PathBuf) -> Option<Process> {
         return None;
     }
 
-    let Some(file_name) = path.file_name().and_then(OsStr::to_str) else {
-        return None;
-    };
+    let file_name = path.file_name().and_then(OsStr::to_str)?;
 
     let Ok(id) = file_name.parse::<u64>() else {
         return None;
@@ -36,10 +34,7 @@ fn process_from_path(path: PathBuf) -> Option<Process> {
         let mut line = String::new();
         reader.read_line(&mut line).ok()?;
 
-        let Some(Ok(base)) = line
-            .split_once('-')
-            .and_then(|(base, _)| Some(base.parse::<u64>()))
-        else {
+        let Some(Ok(base)) = line.split_once('-').map(|(base, _)| base.parse::<u64>()) else {
             return None;
         };
 
@@ -68,6 +63,6 @@ pub fn list() -> std::io::Result<Vec<Process>> {
 }
 
 pub fn from_id(id: u64) -> Option<Process> {
-    let path = PathBuf::from(format!("/proc/{}", id.to_string()));
+    let path = PathBuf::from(format!("/proc/{}", id));
     process_from_path(path)
 }

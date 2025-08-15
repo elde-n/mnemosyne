@@ -16,19 +16,19 @@ impl Scanner {
     }
 
     pub fn add_signature(&mut self, signature: &str) {
-        if signature.len() == 0 {
+        if signature.is_empty() {
             return;
         }
 
         self.signatures
-            .push(Signature::new(signature, self.wildcard.as_str()).to_decimal());
+            .push(Signature::new(signature, self.wildcard.as_str()).as_decimal());
     }
 
     pub fn scan(&mut self) -> Vec<Option<u64>> {
         let mut addresses = vec![None; self.signatures.len()];
 
         for (i, signature) in self.signatures.iter().enumerate() {
-            let (needle, offset) = signature.into_needle();
+            let (needle, offset) = signature.needle();
             memchr::memmem::find_iter(&self.bytes, &needle.as_slice()).for_each(|j| {
                 let index = j - offset as usize;
                 if signature.match_bytes(&self.bytes[index..index + (signature.len() as usize)]) {
@@ -70,7 +70,7 @@ impl Signature {
         split_signature.nth(index as usize).map(|s| s.to_string())
     }
 
-    fn to_decimal(&mut self) -> Self {
+    fn as_decimal(&mut self) -> Self {
         let mut new_signature = String::new();
 
         let split_signature = self.raw.split_whitespace();
@@ -81,7 +81,7 @@ impl Signature {
                 new_signature.push_str(u8::from_str_radix(c, 16).unwrap().to_string().as_str());
             }
 
-            new_signature.push_str(" ");
+            new_signature.push(' ');
         }
 
         new_signature.pop();
@@ -91,7 +91,7 @@ impl Signature {
         }
     }
 
-    fn into_needle(&self) -> (Vec<u8>, u64) {
+    fn needle(&self) -> (Vec<u8>, u64) {
         let split_signature: Vec<&str> = self.raw.split(self.wildcard.as_str()).collect();
 
         let (position, _) = split_signature
@@ -111,7 +111,7 @@ impl Signature {
 
         let needle = split_signature[position]
             .split_whitespace()
-            .map(|s| u8::from_str_radix(s, 10).unwrap())
+            .map(|s| s.parse::<u8>().unwrap())
             .collect();
 
         (needle, offset)
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_signature_into_needle() {
+    fn test_signature_needle() {
         let signatures = vec![
             "00 00 ? 10 10 10 10 ? ?",
             "10 20 30 ? 00",
@@ -200,19 +200,19 @@ mod tests {
 
         for signature in signatures {
             let signature = Signature::new(signature, "?");
-            let (needle, offset) = signature.into_needle();
+            let (needle, offset) = signature.needle();
             assert_eq!((needle, offset), results.next().unwrap());
         }
     }
 
     #[test]
-    fn test_signature_to_decimal() {
+    fn test_signature_as_decimal() {
         let signatures = vec!["FF E3 DD 00 ? ? ? 4B"];
 
         let mut results = vec!["255 227 221 0 ? ? ? 75"].into_iter();
 
         for signature in signatures {
-            let signature = Signature::new(signature, "?").to_decimal();
+            let signature = Signature::new(signature, "?").as_decimal();
             assert_eq!(signature.raw, results.next().unwrap());
         }
     }
@@ -235,9 +235,9 @@ mod tests {
         .into_iter();
 
         for signature in signatures {
-            let signature = Signature::new(signature, "?").to_decimal();
+            let signature = Signature::new(signature, "?").as_decimal();
 
-            let (_needle, _offset) = signature.into_needle();
+            let (_needle, _offset) = signature.needle();
             assert_eq!(
                 signature.match_bytes(&bytes.next().unwrap()[..signature.len() as usize]),
                 true

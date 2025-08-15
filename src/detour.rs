@@ -61,10 +61,7 @@ impl Detour {
     }
 
     fn restore(&self) -> bool {
-        match module::write(self.original_pointer, &self.original_bytes) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        module::write(self.original_pointer, &self.original_bytes).is_ok()
     }
 
     pub fn call_original<R, Args>(&mut self, args: Args) -> Result<R, &str> {
@@ -86,7 +83,7 @@ impl Detour {
 
 impl Default for Detour {
     fn default() -> Self {
-        return unsafe { std::mem::MaybeUninit::<Self>::zeroed().assume_init() };
+        unsafe { std::mem::MaybeUninit::<Self>::zeroed().assume_init() }
     }
 }
 
