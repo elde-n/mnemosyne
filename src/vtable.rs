@@ -5,7 +5,7 @@ pub struct VTable {
     original_pointer: u64,
     original_method: u64,
 
-    pub is_hooked: bool
+    pub is_hooked: bool,
 }
 
 impl VTable {
@@ -15,7 +15,7 @@ impl VTable {
             original_pointer: original,
             original_method: 0,
 
-            is_hooked: false
+            is_hooked: false,
         }
     }
 
@@ -25,7 +25,7 @@ impl VTable {
         self.original_method = unsafe {
             let result = module::read::<u64>(vmt.add(self.method_index as usize) as u64);
             if result.is_none() {
-                return Err("invalid method index".into())
+                return Err("invalid method index".into());
             }
 
             result.unwrap()
@@ -44,7 +44,7 @@ impl VTable {
         let result = unsafe {
             module::write(
                 vmt.add(self.method_index as usize) as u64,
-                &(self.original_method)
+                &(self.original_method),
             )
         };
 

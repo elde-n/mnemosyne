@@ -4,7 +4,7 @@ pub struct Detour {
     hook_pointer: u64,
     original_pointer: u64,
     original_bytes: [u8; 12],
-    is_hooked: bool
+    is_hooked: bool,
 }
 
 impl Detour {
@@ -13,11 +13,11 @@ impl Detour {
             hook_pointer: hook,
             original_pointer: original,
             original_bytes: [0; 12],
-            is_hooked: false
+            is_hooked: false,
         };
 
         if !detour.save() || !detour.hook() {
-            return None
+            return None;
         }
 
         Some(detour)
@@ -25,7 +25,7 @@ impl Detour {
 
     fn hook(&mut self) -> bool {
         let mut jump = [
-            0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0
+            0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0,
         ];
 
         let hook_address = self.hook_pointer;
@@ -37,14 +37,14 @@ impl Detour {
                 true
             }
 
-            Err(_) => false
+            Err(_) => false,
         }
     }
 
     pub fn unhook(&mut self) -> bool {
         if self.is_hooked {
             self.is_hooked = false;
-            return self.restore()
+            return self.restore();
         }
 
         true
@@ -53,7 +53,7 @@ impl Detour {
     fn save(&mut self) -> bool {
         let result = module::read::<[u8; 12]>(self.original_pointer);
         if result.is_none() {
-            return false
+            return false;
         }
 
         self.original_bytes = result.unwrap();
@@ -63,13 +63,13 @@ impl Detour {
     fn restore(&self) -> bool {
         match module::write(self.original_pointer, &self.original_bytes) {
             Ok(_) => true,
-            Err(_) => false
+            Err(_) => false,
         }
     }
 
     pub fn call_original<R, Args>(&mut self, args: Args) -> Result<R, &str> {
         if !self.unhook() {
-            return Err("failed to unhook detour")
+            return Err("failed to unhook detour");
         }
 
         let result = unsafe {
@@ -77,7 +77,7 @@ impl Detour {
         };
 
         if !self.hook() {
-            return Err("failed to re-hook detour")
+            return Err("failed to re-hook detour");
         }
 
         Ok(result)
@@ -93,7 +93,7 @@ impl Default for Detour {
 impl Drop for Detour {
     fn drop(&mut self) {
         if self.hook_pointer == 0 {
-            return
+            return;
         }
 
         self.unhook();

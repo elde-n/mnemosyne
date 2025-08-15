@@ -3,7 +3,7 @@ use memchr;
 pub struct Scanner {
     bytes: Vec<u8>,
     signatures: Vec<Signature>,
-    wildcard: String
+    wildcard: String,
 }
 
 impl Scanner {
@@ -11,7 +11,7 @@ impl Scanner {
         Scanner {
             bytes: file.to_vec(),
             signatures: Vec::new(),
-            wildcard: String::from(wildcard)
+            wildcard: String::from(wildcard),
         }
     }
 
@@ -46,14 +46,14 @@ impl Scanner {
 
 struct Signature {
     raw: String,
-    wildcard: String
+    wildcard: String,
 }
 
 impl Signature {
     fn new(raw: &str, wildcard: &str) -> Self {
         Signature {
             raw: String::from(raw),
-            wildcard: String::from(wildcard)
+            wildcard: String::from(wildcard),
         }
     }
 
@@ -87,7 +87,7 @@ impl Signature {
         new_signature.pop();
         Self {
             raw: new_signature,
-            wildcard: self.wildcard.clone()
+            wildcard: self.wildcard.clone(),
         }
     }
 

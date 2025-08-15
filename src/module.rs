@@ -3,15 +3,15 @@ use std::{
     fs::File,
     io::{BufRead, BufReader, IoSlice, IoSliceMut},
     mem::MaybeUninit,
-    ptr::NonNull
+    ptr::NonNull,
 };
 
 use nix::{
     sys::{
-        mman::{mprotect, ProtFlags},
-        uio::{process_vm_readv, process_vm_writev, RemoteIoVec}
+        mman::{ProtFlags, mprotect},
+        uio::{RemoteIoVec, process_vm_readv, process_vm_writev},
     },
-    unistd::{sysconf, Pid, SysconfVar}
+    unistd::{Pid, SysconfVar, sysconf},
 };
 
 use xxhash_rust::xxh64::xxh64;
@@ -27,13 +27,13 @@ pub fn read<T: Copy>(address: u64) -> Option<T> {
         &mut [IoSliceMut::new(buffer)],
         &[RemoteIoVec {
             base: address as usize,
-            len: size
-        }]
+            len: size,
+        }],
     );
 
     match result {
         Ok(read_size) if read_size == size => Some(unsafe { value.assume_init() }),
-        _ => None
+        _ => None,
     }
 }
 
@@ -45,7 +45,7 @@ pub fn write<T: Copy>(address: u64, value: &T) -> Result<(), String> {
     unsafe {
         let page_size = match sysconf(SysconfVar::PAGE_SIZE) {
             Ok(Some(size)) => size as u64,
-            _ => 4096
+            _ => 4096,
         };
 
         let page_aligned_addr = (address & !(page_size - 1)) as *mut c_void;
@@ -53,7 +53,7 @@ pub fn write<T: Copy>(address: u64, value: &T) -> Result<(), String> {
             Some(addr) => addr,
             None => {
                 return Err(String::from(
-                    "failed to create non-null pointer for memory protection"
+                    "failed to create non-null pointer for memory protection",
                 ));
             }
         };
@@ -61,7 +61,7 @@ pub fn write<T: Copy>(address: u64, value: &T) -> Result<(), String> {
         if let Err(error) = mprotect(
             non_null_addr,
             page_size as usize,
-            ProtFlags::PROT_READ | ProtFlags::PROT_WRITE | ProtFlags::PROT_EXEC
+            ProtFlags::PROT_READ | ProtFlags::PROT_WRITE | ProtFlags::PROT_EXEC,
         ) {
             return Err(format!("failed to set memory protection: {}", error));
         }
@@ -72,13 +72,13 @@ pub fn write<T: Copy>(address: u64, value: &T) -> Result<(), String> {
         &[IoSlice::new(buffer)],
         &[RemoteIoVec {
             base: address as usize,
-            len: size
-        }]
+            len: size,
+        }],
     );
 
     match result {
         Ok(_) => Ok(()),
-        Err(error) => Err(format!("error writing to process memory: {}", error))
+        Err(error) => Err(format!("error writing to process memory: {}", error)),
     }
 }
 
@@ -94,30 +94,30 @@ pub fn bounds<const N: usize>(hash: u64) -> Option<(u64, u64)> {
         let Some(space) = map.find(' ') else { continue };
 
         let Some(end) = map.get((dash + 1)..space) else {
-            continue
+            continue;
         };
 
         let Some(start) = u64::from_str_radix(&map[..dash], 16).ok() else {
-            continue
+            continue;
         };
 
         let Some(end) = u64::from_str_radix(end, 16).ok() else {
-            continue
+            continue;
         };
 
         if ((end - start) as usize) < N {
-            continue
+            continue;
         }
 
         let Some(buffer) = read::<[u8; N]>(start) else {
-            continue
+            continue;
         };
 
         if hash != xxh64(&buffer, 0) {
-            continue
+            continue;
         }
 
-        return Some((start, end))
+        return Some((start, end));
     }
 
     None
