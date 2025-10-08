@@ -1,7 +1,11 @@
-# Mnemosyne
-a rust library for
+<div align="center">
+<h1>mnemosyne</h1>
 
+A process hacking library.
+</div>
+
+## Features
 - hooking functions
 - hooking virtual table methods
-- writing/reading memory
+- writing and reading memory
 - signature scanning
