@@ -34,11 +34,11 @@ fn process_from_path(path: PathBuf) -> Option<Process> {
         let mut line = String::new();
         reader.read_line(&mut line).ok()?;
 
-        let Some(Ok(base)) = line.split_once('-').map(|(base, _)| base.parse::<u64>()) else {
+        let Some(base) = line.split_once('-').map(|(base, _)| base) else {
             return None;
         };
 
-        base
+        u64::from_str_radix(base, 16).ok()?
     };
 
     Some(Process {
